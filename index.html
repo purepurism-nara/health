@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f5f7f1">
+  <title>하루핏 - 나를 위한 운동 달력</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #172b24;
+      --muted: #829088;
+      --green: #2d654e;
+      --green-dark: #1d4938;
+      --mint: #e6f0e8;
+      --paper: #ffffff;
+      --canvas: #f5f7f1;
+      --line: #edf0ea;
+      --orange: #f2a36d;
+      --shadow: 0 16px 42px rgba(34, 61, 46, .08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-width: 320px;
+      min-height: 100vh;
+      margin: 0;
+      background:
+        radial-gradient(ellipse at 50% 0%, rgba(226, 238, 224, .55), transparent 38rem),
+        var(--canvas);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button { font: inherit; }
+
+    .app {
+      width: min(100%, 480px);
+      min-height: 100vh;
+      margin: 0 auto;
+      padding: 23px 22px 38px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-size: 17px;
+      font-weight: 850;
+      letter-spacing: -.7px;
+    }
+
+    .brand-mark {
+      display: grid;
+      width: 34px;
+      height: 34px;
+      place-items: center;
+      border-radius: 12px;
+      background: #e5efe4;
+      color: var(--green);
+      font-size: 19px;
+    }
+
+    .profile {
+      display: grid;
+      width: 38px;
+      height: 38px;
+      place-items: center;
+      border: 2px solid white;
+      border-radius: 50%;
+      background: #f4ddc9;
+      box-shadow: 0 2px 9px rgba(30, 55, 42, .09);
+      font-size: 19px;
+    }
+
+    .eyebrow {
+      margin: 0 0 5px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 650;
+      letter-spacing: .1px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 25px;
+      font-weight: 850;
+      letter-spacing: -1.15px;
+      line-height: 1.3;
+    }
+
+    .month-switcher {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 21px 0 14px;
+    }
+
+    .month-switcher h2 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 820;
+      letter-spacing: -.55px;
+    }
+
+    .month-switcher h2 span {
+      margin-left: 4px;
+      color: #9ba59e;
+      font-size: 14px;
+      font-weight: 650;
+    }
+
+    .month-actions { display: flex; gap: 7px; }
+
+    .icon-button {
+      display: grid;
+      width: 34px;
+      height: 34px;
+      place-items: center;
+      padding: 0;
+      border: 1px solid #e9ede7;
+      border-radius: 12px;
+      background: white;
+      color: #526158;
+      cursor: pointer;
+      transition: background .18s, transform .18s;
+    }
+
+    .icon-button:hover { background: #f0f5ef; }
+    .icon-button:active { transform: scale(.94); }
+    .icon-button:focus-visible, button:focus-visible {
+      outline: 3px solid #90b8a0;
+      outline-offset: 3px;
+    }
+
+    .hero {
+      position: relative;
+      display: flex;
+      min-height: 166px;
+      overflow: hidden;
+      align-items: center;
+      justify-content: space-between;
+      padding: 21px 19px 20px 21px;
+      border-radius: 22px;
+      background: var(--green-dark);
+      color: white;
+      box-shadow: 0 12px 24px rgba(29, 73, 56, .15);
+      isolation: isolate;
+    }
+
+    .hero::before, .hero::after {
+      position: absolute;
+      z-index: -1;
+      border: 1px solid rgba(255, 255, 255, .08);
+      border-radius: 50%;
+      content: "";
+    }
+
+    .hero::before { width: 190px; height: 190px; top: -118px; right: -31px; }
+    .hero::after { width: 225px; height: 225px; right: -48px; bottom: -169px; }
+
+    .hero-copy { max-width: 235px; }
+
+    .hero-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      margin-bottom: 12px;
+      color: #d0e5d3;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .2px;
+    }
+
+    .hero h2 {
+      margin: 0 0 7px;
+      font-size: 20px;
+      font-weight: 850;
+      letter-spacing: -.7px;
+      line-height: 1.4;
+    }
+
+    .hero p {
+      margin: 0;
+      color: #d2e0d4;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .character-wrap {
+      position: relative;
+      display: grid;
+      width: 118px;
+      height: 125px;
+      flex: 0 0 118px;
+      align-items: end;
+      justify-items: center;
+      margin-right: -5px;
+    }
+
+    .character-wrap::before {
+      position: absolute;
+      right: 5px;
+      bottom: 2px;
+      left: 5px;
+      height: 42px;
+      border-radius: 50%;
+      background: rgba(9, 29, 20, .18);
+      content: "";
+    }
+
+    .character {
+      position: relative;
+      z-index: 1;
+      width: 115px;
+      height: 120px;
+      overflow: visible;
+      animation: float 3.2s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(1px) rotate(-1deg); }
+      50% { transform: translateY(-5px) rotate(1deg); }
+    }
+
+    .calendar-card, .coach-card {
+      border: 1px solid rgba(231, 236, 228, .8);
+      border-radius: 20px;
+      background: var(--paper);
+      box-shadow: var(--shadow);
+    }
+
+    .calendar-card {
+      margin-top: 16px;
+      padding: 17px 15px 15px;
+    }
+
+    .calendar-head {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      margin-bottom: 7px;
+    }
+
+    .weekday {
+      padding: 5px 0 8px;
+      color: #9aa39c;
+      font-size: 10px;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .weekday:first-child { color: #dd8b7d; }
+    .weekday:last-child { color: #84a2c0; }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 4px 2px;
+    }
+
+    .day {
+      position: relative;
+      display: flex;
+      min-width: 0;
+      height: 48px;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 3px 0;
+      border: 0;
+      border-radius: 12px;
+      background: transparent;
+      color: #47544b;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 650;
+      transition: background .18s, color .18s;
+    }
+
+    .day:hover:not(:disabled) { background: #f3f6f1; }
+    .day.outside { color: #c4cbc5; }
+    .day.sunday:not(.selected) { color: #d7897b; }
+    .day.saturday:not(.selected) { color: #829eb9; }
+
+    .day.selected {
+      background: #eaf2e9;
+      color: var(--green-dark);
+      font-weight: 850;
+    }
+
+    .day.today .day-number::after {
+      position: absolute;
+      right: -4px;
+      bottom: -2px;
+      left: -4px;
+      height: 2px;
+      border-radius: 2px;
+      background: #e99c6e;
+      content: "";
+    }
+
+    .day-number { position: relative; line-height: 15px; }
+
+    .day-dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: #a8c9a6;
+    }
+
+    .day.completed .day-dot { background: #e7a36d; }
+    .day.selected .day-dot { background: var(--green); }
+    .day:disabled { cursor: default; }
+
+    .calendar-legend {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 10px;
+      color: #99a29b;
+      font-size: 10px;
+    }
+
+    .legend-item { display: inline-flex; align-items: center; gap: 5px; }
+    .legend-dot { width: 5px; height: 5px; border-radius: 50%; background: #a8c9a6; }
+    .legend-dot.done { background: #e7a36d; }
+
+    .coach-card {
+      margin-top: 16px;
+      padding: 17px;
+    }
+
+    .coach-heading {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .coach-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+      font-size: 15px;
+      font-weight: 820;
+      letter-spacing: -.4px;
+    }
+
+    .coach-icon {
+      display: grid;
+      width: 29px;
+      height: 29px;
+      place-items: center;
+      border-radius: 10px;
+      background: #edf4ed;
+      font-size: 15px;
+    }
+
+    .coach-date {
+      padding-top: 7px;
+      color: #98a19a;
+      font-size: 11px;
+      font-weight: 650;
+    }
+
+    .routine {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      border-radius: 14px;
+      background: #f6f8f4;
+    }
+
+    .routine-emoji {
+      display: grid;
+      width: 42px;
+      height: 42px;
+      flex: 0 0 42px;
+      place-items: center;
+      border-radius: 13px;
+      background: #e7efe4;
+      font-size: 21px;
+    }
+
+    .routine-copy { min-width: 0; flex: 1; }
+    .routine-copy strong { display: block; font-size: 13px; font-weight: 800; }
+    .routine-copy span { display: block; margin-top: 4px; color: #89948c; font-size: 10px; }
+
+    .coach-tip {
+      margin: 12px 1px 14px;
+      color: #6d796f;
+      font-size: 11px;
+      line-height: 1.65;
+    }
+
+    .complete-button {
+      display: flex;
+      width: 100%;
+      min-height: 43px;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      border: 0;
+      border-radius: 13px;
+      background: var(--green);
+      color: white;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 800;
+      transition: background .18s, transform .18s;
+    }
+
+    .complete-button:hover { background: #24563f; }
+    .complete-button:active { transform: scale(.985); }
+    .complete-button.is-complete { background: #edf4ec; color: var(--green); }
+
+    .footer-note {
+      margin: 17px 0 0;
+      color: #a3aba4;
+      font-size: 10px;
+      text-align: center;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      clip-path: inset(50%);
+    }
+
+    @media (max-width: 370px) {
+      .app { padding-right: 15px; padding-left: 15px; }
+      .hero { padding-right: 14px; padding-left: 17px; }
+      .hero-copy { max-width: 205px; }
+      .character-wrap { width: 100px; flex-basis: 100px; }
+      .character { width: 102px; }
+      .calendar-card { padding-right: 10px; padding-left: 10px; }
+      .day { height: 44px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        scroll-behavior: auto !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">✳</span>하루핏</div>
+      <div class="profile" aria-label="내 프로필">😊</div>
+    </header>
+
+    <section aria-labelledby="page-title">
+      <p class="eyebrow">나를 돌보는 작은 습관</p>
+      <h1 id="page-title">오늘도, 나답게 건강하게</h1>
+    </section>
+
+    <div class="month-switcher">
+      <h2 id="month-title" aria-live="polite"></h2>
+      <div class="month-actions">
+        <button class="icon-button" id="previous-month" type="button" aria-label="이전 달">‹</button>
+        <button class="icon-button" id="next-month" type="button" aria-label="다음 달">›</button>
+      </div>
+    </div>
+
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <div class="hero-label"><span aria-hidden="true">✦</span><span id="character-name"></span> 코치의 한마디</div>
+        <h2 id="hero-title"></h2>
+        <p id="hero-message"></p>
+      </div>
+      <div class="character-wrap" id="character-art" role="img"></div>
+    </section>
+
+    <section class="calendar-card" aria-label="운동 달력">
+      <div class="calendar-head" aria-hidden="true">
+        <span class="weekday">일</span><span class="weekday">월</span><span class="weekday">화</span>
+        <span class="weekday">수</span><span class="weekday">목</span><span class="weekday">금</span>
+        <span class="weekday">토</span>
+      </div>
+      <div class="calendar-grid" id="calendar-grid" role="group" aria-label="월간 달력"></div>
+      <div class="calendar-legend" aria-hidden="true">
+        <span class="legend-item"><i class="legend-dot"></i>운동 예정</span>
+        <span class="legend-item"><i class="legend-dot done"></i>운동 완료</span>
+      </div>
+    </section>
+
+    <section class="coach-card" aria-labelledby="coach-title">
+      <div class="coach-heading">
+        <h2 class="coach-title" id="coach-title"><span class="coach-icon" aria-hidden="true">🏃</span>오늘의 운동 코칭</h2>
+        <span class="coach-date" id="selected-date"></span>
+      </div>
+      <div class="routine">
+        <div class="routine-emoji" id="routine-emoji" aria-hidden="true"></div>
+        <div class="routine-copy">
+          <strong id="routine-name"></strong>
+          <span id="routine-detail"></span>
+        </div>
+      </div>
+      <p class="coach-tip" id="coach-tip"></p>
+      <button class="complete-button" id="complete-button" type="button"></button>
+    </section>
+    <p class="footer-note">무리하지 말고, 내 페이스대로 🌱</p>
+    <p class="sr-only" id="status-message" aria-live="polite"></p>
+  </main>
+
+  <script>
+    const characters = [
+      { name: "포포", animal: "bear", shirt: "#e9a26e", cheer: "새해엔 가볍게,\n꾸준히 시작해 봐요!", message: "작은 한 걸음도 멋진 시작이야." },
+      { name: "모모", animal: "bunny", shirt: "#d98ca4", cheer: "오늘의 나를\n마음껏 칭찬해!", message: "천천히 해도 괜찮아, 넌 잘하고 있어." },
+      { name: "토리", animal: "cat", shirt: "#81a8d2", cheer: "봄바람처럼 산뜻하게\n움직여 볼까요?", message: "움직이는 만큼 기분도 가벼워질 거야." },
+      { name: "두부", animal: "bear", shirt: "#e39b78", cheer: "오늘도 충분히\n잘하고 있어!", message: "완벽보다 중요한 건 다시 해보는 마음." },
+      { name: "콩이", animal: "bunny", shirt: "#81b59a", cheer: "햇살만큼 반짝이는\n너의 에너지!", message: "네 속도대로 한 발씩 나아가자." },
+      { name: "구름", animal: "cat", shirt: "#9b91ca", cheer: "가벼운 스트레칭으로\n기분 좋게 출발!", message: "몸을 깨우면 마음에도 여유가 찾아와." },
+      { name: "밤비", animal: "deer", shirt: "#dfad68", cheer: "더운 날엔 시원하게,\n딱 내 컨디션만큼!", message: "쉬어 가는 것도 멋진 운동 계획이야." },
+      { name: "초코", animal: "bear", shirt: "#74a6a0", cheer: "차근차근 쌓아온\n네 노력이 빛나!", message: "오늘의 땀방울이 내일의 자신감이 돼." },
+      { name: "별이", animal: "cat", shirt: "#dd8d78", cheer: "가을 바람과 함께\n산책 어떨까요?", message: "밖으로 나와 한 걸음, 그걸로 충분해." },
+      { name: "호두", animal: "bear", shirt: "#84a782", cheer: "이번 달도 함께\n힘내 보자!", message: "작은 습관이 모여 큰 변화를 만들 거야." },
+      { name: "라떼", animal: "bunny", shirt: "#ad91c9", cheer: "포근하게 몸을 풀고\n나를 아껴 주세요.", message: "추운 날엔 실내에서 천천히 움직여도 좋아." },
+      { name: "눈송", animal: "deer", shirt: "#76a9bb", cheer: "올 한 해 정말 수고했어,\n마지막까지 파이팅!", message: "여기까지 온 너, 정말 대단해!" }
+    ];
+
+    const routines = [
+      { name: "가벼운 전신 스트레칭", detail: "10분 · 목·어깨·허리 풀기", emoji: "🧘", tip: "숨을 천천히 내쉬며, 불편하지 않은 범위까지만 늘려 주세요. 몸이 보내는 신호가 가장 중요해요." },
+      { name: "산뜻한 걷기", detail: "20분 · 편안한 속도로 산책", emoji: "🚶", tip: "조금 숨이 차지만 대화할 수 있는 정도로 걸어 보세요. 물 한 잔도 잊지 마세요!" },
+      { name: "하체 근력 깨우기", detail: "스쿼트 10회 × 2세트", emoji: "🦵", tip: "무릎은 발끝 방향으로, 엉덩이를 뒤로 보내며 앉아 주세요. 힘들면 의자를 잡고 해도 좋아요." },
+      { name: "기분 전환 실내 자전거", detail: "15분 · 가볍게 페달 밟기", emoji: "🚲", tip: "처음 3분은 천천히 몸을 데우고, 마지막엔 속도를 줄여 마무리해요." },
+      { name: "코어 탄탄 플랭크", detail: "20초 × 3회 · 중간 휴식", emoji: "💪", tip: "허리가 꺾이지 않게 배꼽을 살짝 당겨 보세요. 짧게 해도 충분히 좋아요." },
+      { name: "편안한 요가", detail: "12분 · 호흡과 균형에 집중", emoji: "🌿", tip: "자세를 잘하는 것보다 호흡을 이어가는 게 더 중요해요. 오늘은 편안함을 찾아봐요." },
+      { name: "회복 산책", detail: "15분 · 천천히 동네 한 바퀴", emoji: "☀️", tip: "오늘은 회복하는 날! 주변 풍경을 즐기며 느긋하게 걸어도 훌륭한 운동이에요." }
+    ];
+
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    let visibleMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    let selectedDate = new Date(today);
+    const storageKey = "harufit-completed-days";
+    let completedDays = loadCompletedDays();
+
+    function loadCompletedDays() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(storageKey) || "[]");
+        if (!Array.isArray(saved) || !saved.every(item => typeof item === "string")) {
+          throw new Error("저장된 운동 기록의 형식이 올바르지 않습니다.");
+        }
+        return new Set(saved);
+      } catch (error) {
+        if (error instanceof SyntaxError) {
+          console.error("운동 기록을 읽을 수 없습니다.", error);
+          return new Set();
+        }
+        throw error;
+      }
+    }
+
+    function dateKey(date) {
+      return [date.getFullYear(), String(date.getMonth() + 1).padStart(2, "0"), String(date.getDate()).padStart(2, "0")].join("-");
+    }
+
+    function saveCompletedDays() {
+      localStorage.setItem(storageKey, JSON.stringify([...completedDays]));
+    }
+
+    function escapeText(value) {
+      const span = document.createElement("span");
+      span.textContent = value;
+      return span.innerHTML;
+    }
+
+    function characterSvg(character) {
+      const ears = {
+        bear: '<circle cx="34" cy="32" r="13" fill="#f5c99f"/><circle cx="81" cy="32" r="13" fill="#f5c99f"/><circle cx="34" cy="32" r="6" fill="#e9a88b"/><circle cx="81" cy="32" r="6" fill="#e9a88b"/>',
+        bunny: '<ellipse cx="39" cy="25" rx="8" ry="21" transform="rotate(-12 39 25)" fill="#f5c99f"/><ellipse cx="77" cy="25" rx="8" ry="21" transform="rotate(12 77 25)" fill="#f5c99f"/><ellipse cx="39" cy="25" rx="3.5" ry="13" transform="rotate(-12 39 25)" fill="#e9a88b"/><ellipse cx="77" cy="25" rx="3.5" ry="13" transform="rotate(12 77 25)" fill="#e9a88b"/>',
+        cat: '<path d="M25 42 27 19 46 33M69 33 88 19 90 42" fill="#f5c99f" stroke="#d49b77" stroke-width="2" stroke-linejoin="round"/><path d="m31 34 1-9 8 6m37 0 8-6 1 9" fill="#e9a88b"/>',
+        deer: '<path d="M38 34 31 22 24 17M30 22l2-9m43 21 7-12 7-5m-7 6-2-9" fill="none" stroke="#d49b77" stroke-width="4" stroke-linecap="round"/><circle cx="24" cy="17" r="4" fill="#f5c99f"/><circle cx="88" cy="17" r="4" fill="#f5c99f"/>'
+      };
+      return `<svg class="character" viewBox="0 0 115 125" aria-hidden="true">
+        <ellipse cx="57" cy="116" rx="32" ry="6" fill="rgba(10,30,20,.15)"/>
+        ${ears[character.animal]}
+        <path d="M35 75c-10 2-14 11-11 21 2 5 6 7 12 6l5-16m39-11c10 2 14 11 11 21-2 5-6 7-12 6l-5-16" fill="#f5c99f" stroke="#d49b77" stroke-width="1.5"/>
+        <path d="M37 79c0-13 8-19 20-19s21 6 21 19v25H37z" fill="${character.shirt}"/>
+        <path d="M48 79 57 88l9-9" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".78"/>
+        <path d="M43 103v8m27-8v8" stroke="#f5c99f" stroke-width="8" stroke-linecap="round"/>
+        <ellipse cx="40" cy="112" rx="10" ry="5" fill="#f5c99f"/><ellipse cx="74" cy="112" rx="10" ry="5" fill="#f5c99f"/>
+        <circle cx="57" cy="48" r="29" fill="#f5c99f" stroke="#d49b77" stroke-width="1.5"/>
+        <ellipse cx="47" cy="49" rx="2" ry="3" fill="#493a35"/><ellipse cx="67" cy="49" rx="2" ry="3" fill="#493a35"/>
+        <ellipse cx="39" cy="58" rx="5" ry="3" fill="#eb9d91" opacity=".7"/><ellipse cx="75" cy="58" rx="5" ry="3" fill="#eb9d91" opacity=".7"/>
+        <path d="M53 57q4 4 8 0" fill="none" stroke="#76554c" stroke-width="1.8" stroke-linecap="round"/>
+        <path d="M85 42l4-8 3 8 8 3-8 3-3 8-4-8-7-3z" fill="#f6c76f"/>
+      </svg>`;
+    }
+
+    function renderCharacter() {
+      const character = characters[visibleMonth.getMonth()];
+      document.getElementById("character-name").textContent = character.name;
+      document.getElementById("hero-title").innerHTML = escapeText(character.cheer).replace(/\n/g, "<br>");
+      document.getElementById("hero-message").textContent = character.message;
+      const art = document.getElementById("character-art");
+      art.setAttribute("aria-label", `${character.name}, ${character.animal === "bear" ? "곰" : character.animal === "bunny" ? "토끼" : character.animal === "cat" ? "고양이" : "사슴"} 운동 코치`);
+      art.innerHTML = characterSvg(character);
+    }
+
+    function renderCalendar() {
+      const year = visibleMonth.getFullYear();
+      const month = visibleMonth.getMonth();
+      const monthLabel = new Intl.DateTimeFormat("ko-KR", { year: "numeric", month: "long" }).format(visibleMonth);
+      document.getElementById("month-title").innerHTML = `${monthLabel}<span>운동 달력</span>`;
+      renderCharacter();
+
+      const firstDay = new Date(year, month, 1);
+      const start = new Date(year, month, 1 - firstDay.getDay());
+      const grid = document.getElementById("calendar-grid");
+      const cells = [];
+      for (let index = 0; index < 42; index += 1) {
+        const date = new Date(start.getFullYear(), start.getMonth(), start.getDate() + index);
+        const key = dateKey(date);
+        const isCurrentMonth = date.getMonth() === month;
+        const isSelected = key === dateKey(selectedDate);
+        const isToday = key === dateKey(today);
+        const isCompleted = completedDays.has(key);
+        const isScheduled = date.getDay() !== 0 && date.getDay() !== 6;
+        const classes = ["day"];
+        if (!isCurrentMonth) classes.push("outside");
+        if (date.getDay() === 0) classes.push("sunday");
+        if (date.getDay() === 6) classes.push("saturday");
+        if (isSelected) classes.push("selected");
+        if (isToday) classes.push("today");
+        if (isCompleted) classes.push("completed");
+        const label = `${year}년 ${date.getMonth() + 1}월 ${date.getDate()}일${isToday ? ", 오늘" : ""}${isCompleted ? ", 운동 완료" : ""}`;
+        cells.push(`<button type="button" class="${classes.join(" ")}" aria-label="${label}" aria-pressed="${isSelected}" data-date="${key}" ${isCurrentMonth ? "" : "disabled"}>
+          <span class="day-number">${date.getDate()}</span>
+          ${isScheduled || isCompleted ? `<i class="day-dot" aria-hidden="true"></i>` : `<span style="height:4px"></span>`}
+        </button>`);
+      }
+      grid.innerHTML = cells.join("");
+      grid.querySelectorAll(".day:not(:disabled)").forEach(button => {
+        button.addEventListener("click", () => {
+          const [selectedYear, selectedMonth, selectedDay] = button.dataset.date.split("-").map(Number);
+          selectedDate = new Date(selectedYear, selectedMonth - 1, selectedDay);
+          renderCalendar();
+          renderRoutine();
+        });
+      });
+      renderRoutine();
+    }
+
+    function renderRoutine() {
+      const weekday = new Intl.DateTimeFormat("ko-KR", { weekday: "long" }).format(selectedDate);
+      const dateLabel = new Intl.DateTimeFormat("ko-KR", { month: "long", day: "numeric" }).format(selectedDate);
+      const routine = routines[selectedDate.getDay()];
+      const isCompleted = completedDays.has(dateKey(selectedDate));
+      document.getElementById("selected-date").textContent = `${dateLabel} ${weekday}`;
+      document.getElementById("routine-emoji").textContent = routine.emoji;
+      document.getElementById("routine-name").textContent = routine.name;
+      document.getElementById("routine-detail").textContent = routine.detail;
+      document.getElementById("coach-tip").textContent = routine.tip;
+      const button = document.getElementById("complete-button");
+      button.classList.toggle("is-complete", isCompleted);
+      button.setAttribute("aria-pressed", String(isCompleted));
+      button.innerHTML = isCompleted ? "✓ 오늘 운동 완료했어요" : "운동 완료 체크하기 <span aria-hidden=\"true\">→</span>";
+    }
+
+    document.getElementById("previous-month").addEventListener("click", () => {
+      visibleMonth = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() - 1, 1);
+      selectedDate = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth(), 1);
+      renderCalendar();
+    });
+
+    document.getElementById("next-month").addEventListener("click", () => {
+      visibleMonth = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + 1, 1);
+      selectedDate = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth(), 1);
+      renderCalendar();
+    });
+
+    document.getElementById("complete-button").addEventListener("click", () => {
+      const key = dateKey(selectedDate);
+      if (completedDays.has(key)) {
+        completedDays.delete(key);
+      } else {
+        completedDays.add(key);
+      }
+      saveCompletedDays();
+      renderCalendar();
+      const isCompleted = completedDays.has(key);
+      document.getElementById("status-message").textContent = isCompleted ? "운동 완료를 기록했어요. 정말 멋져요!" : "운동 완료 기록을 취소했어요.";
+    });
+
+    renderCalendar();
+  </script>
+</body>
+</html>
